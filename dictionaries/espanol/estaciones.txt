@@ -1,0 +1,4 @@
+verano
+primavera
+otoño
+invierno
