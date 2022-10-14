@@ -18,7 +18,7 @@
         u) Url List (Optional)
         h) Help Panel
 ```
-1. clone: `git clone https:://...
+1. clone: `git clone https://github.com/dur4ng/cracker`
 2. add corporative keywords to `./dictionaries/<language>/corporative.txt`
 3. run the tool `./cracker.sh -f ./hash.txt -p hashcat -m ntlm -l english`
 4. run csv2wordTable.ps1 to create a word table for the report
