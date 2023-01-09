@@ -23,14 +23,14 @@ function helpPanel(){
 	echo -e "\n${yellowColour}[*]${endColour}${grayColour} Uso: ./cracker.sh -f ./hashes.txt -p hashcat -m ntlm -l spanish${endColour}"
 	echo -e "\n\t${purpleColour}f)${endColour}${yellowColour} Hashes File${endColour}"
 	echo -e "\t${purpleColour}p)${endColour}${yellowColour} Program${endColour}"
-    echo -e "\t\t${redColour}hashcat${endColour}"
+    	echo -e "\t\t${redColour}hashcat${endColour}"
 	echo -e "\t\t${redColour}john${endColour}"
-    echo -e "\t${purpleColour}m)${endColour}${yellowColour} Hash Mode${endColour}"
-    echo -e "\t\t${redColour}ntlm${endColour}"
-    echo -e "\t${purpleColour}l)${endColour}${yellowColour} Language Mode${endColour}"
-    echo -e "\t\t${redColour}spanish${endColour}"
-    echo -e "\t\t${redColour}english${endColour}"
-    echo -e "\t${purpleColour}u)${endColour}${yellowColour} Url List (Optional)${endColour}"
+    	echo -e "\t${purpleColour}m)${endColour}${yellowColour} Hash Mode${endColour}"
+    	echo -e "\t\t${redColour}ntlm${endColour}"
+    	echo -e "\t${purpleColour}l)${endColour}${yellowColour} Language Mode${endColour}"
+    	echo -e "\t\t${redColour}spanish${endColour}"
+    	echo -e "\t\t${redColour}english${endColour}"
+    	echo -e "\t${purpleColour}u)${endColour}${yellowColour} Url List (Optional)${endColour}"
 	echo -e "\t${purpleColour}h)${endColour}${yellowColour} Help Panel${endColour}\n"
     	
 	exit 0
@@ -59,9 +59,10 @@ function dependencies(){
 
 # Wordlists
 function wordlistGenerator() {
-    if [ -z $urlList]; then
-        cewl
-    fi
+
+    #if [ -z $urlList]; then
+    #    cewl
+    #fi
 
     case $languageMode in
         english)
@@ -70,16 +71,21 @@ function wordlistGenerator() {
             mergeDicEnglish
         ;;
         spanish)
-            echo -e "Creating a spanish wordlist\n"
+            echo -e "${yellowColour}[*]${endColour}${grayColour} Creating a spanish wordlist\n${endColour}"
             mergeDicEspanol
         ;;
         *)
-            echo -e "unkown language"
+            echo -e "${redColour}[*]${endColour}${grayColour} unkown language\n${endColour}"
+            exit 1
         ;;
     esac
     
-    princeprocessor
     rsmangler
+    #princeprocessor
+    cat ./dictionaries/permutedWordlist.txt >> ./dictionaries/customWordlist.txt
+    cat ./dictionaries/princeWordlist.txt >> ./dictionaries/customWordlist.txt
+    seq 600000000 799999999 > ./dictionaries/customWordlist.txt
+    seq 900000000 999999999 > ./dictionaries/customWordlist.txt
 }
 function cewl() {
     rm ./dictionaries/cewl.txt
@@ -94,34 +100,39 @@ function mergeDicEnglish(){
     cat ./dictionaries/english/seasons.txt >> ./dictionaries/mergedDic.txt
     cat ./dictionaries/english/numbers.txt >> ./dictionaries/mergedDic.txt
     cat ./dictionaries/english/corporative.txt >> ./dictionaries/mergedDic.txt
-    cat ./dictionaries/cewl.txt >> ./dictionaries/mergedDic.txt
+    #cat ./dictionaries/cewl.txt >> ./dictionaries/mergedDic.txt
 }
 function mergeDicEspanol(){
+    echo -e "${yellowColour}[*]${endColour}${grayColour} Merging spanish dictionaries...\n${endColour}"
     cat ./dictionaries/espanol/nombres.txt >> ./dictionaries/mergedDic.txt
     cat ./dictionaries/espanol/apellidos.txt >> ./dictionaries/mergedDic.txt
     cat ./dictionaries/espanol/colores.txt >> ./dictionaries/mergedDic.txt
     cat ./dictionaries/espanol/meses.txt >> ./dictionaries/mergedDic.txt
     cat ./dictionaries/espanol/estaciones.txt >> ./dictionaries/mergedDic.txt
-    cat ./dictionaries/espanol/numeros.txt >> ./dictionaries/mergedDic.txt
+    cat ./dictionaries/espanol/anos.txt >> ./dictionaries/mergedDic.txt
     cat ./dictionaries/espanol/corporativo.txt >> ./dictionaries/mergedDic.txt
-    cat ./dictionaries/cewl.txt >> ./dictionaries/mergedDic.txt
+    #cat ./dictionaries/cewl.txt >> ./dictionaries/mergedDic.txt
 }
+
+function rsmangler(){
+    echo -e "${yellowColour}[*]${endColour}${grayColour} Using rsmangler ...\n${endColour}"
+    rsmangler --file ./dictionaries/mergedDic.txt --min 3 --max 14  -e -i --punctuation --output ./dictionaries/permutedWordlist.txt
+}
+
 function princeprocessor(){
-    ./princeprocessor/src/pp64.bin --elem-cnt-min=5 --elem-cnt-max=16 < ./dictionaries/mergedDic.txt > ./dictionaries/pp64wordlist.txt
+    echo -e "${yellowColour}[*]${endColour}${grayColour} Using prince processor...\n${endColour}"
+    ./princeprocessor/pp64.bin --elem-cnt-min=5 --elem-cnt-max=16 < ./dictionaries/permutedWordlist.txt > ./dictionaries/princeWordlist.txt
 
 }
-function rsmangler(){
-    rsmangler --file ./pp64wordlist.txt --min 3 --max 16 -p -d -t -T -c -u -r -d -y --output ./dictionaries/customWordlist.txt
-}
+
 
 # Cracking
 function cracker(){
     case $program in
         hashcat)
-            echo -e "hashcat\n"
+            echo -e "${yellowColour}[*]${endColour}${grayColour} Program used hashcat\n${endColour}"
             case $hashMode in
                 ntlm)
-                    echo -e "ntlm\n"
                     ntlm_hashcat
                 ;;
                 *)
@@ -159,13 +170,9 @@ function ntlm_john(){
     john $hashFile --format=NT --show | head -n -2 > result.txt
 }
 function ntlm_hashcat(){
-    hashcat -m 1000 $hashFile /opt/wordlists/rockyou.txt
-    hashcat -m 1000 $hashFile /opt/wordlists/kaonahsi.txt
-    hashcat -m 1000 $hashFile /opt/wordlists/hasheorg2019.txt
-    hashcat -m 1000 $hashFile /opt/wordlists/crackstation.txt
-    hashcat -m 1000 $hashFile /opt/wordlists/hashkiller-dict.txt
-    hashcat -m 1000 $hashFile /opt/wordlists/HIBP/pwned-passwords-ntlm-ordered-by-count-v7.txt
-    hashcat -m 1000 $hashFile /opt/wordlists/CompilationOfManyBreachesPasswords.txt
+    echo -e "${yellowColour}[*]${endColour}${grayColour} Cracking using generic wordlists...\n${endColour}"
+    hashcat -m 1000 $hashFile /opt/wordlists/rockyou.txt /opt/wordlists/kaonahsi.txt /opt/wordlists/hasheorg2019.txt /opt/wordlists/crackstation.txt /opt/wordlists/hashkiller-dict.txt /opt/wordlists/HIBP/pwned-passwords-ntlm-ordered-by-count-v7.txt /opt/wordlists/CompilationOfManyBreachesPasswords.txt
+    echo -e "${yellowColour}[*]${endColour}${grayColour} Cracking using the custom wordlists...\n${endColour}"
     hashcat -m 1000 $hashFile ./dictionaries/customWordlist.txt
     
     hashcat -m 1000 $hashFile --show --username --outfile-format=2 > result.txt
@@ -215,8 +222,8 @@ if [ $parameter_counter -ne 4 ]; then
 else
 	dependencies
 	wordlistGenerator
-    cracker
-    format
-    tput cnorm
-    echo -e "\n COMPLETED\n Now use csv2wordTable.ps1 to export the results as a word table"
+    	cracker
+    	format
+    	tput cnorm
+    	echo -e "\n COMPLETED\n Now use csv2wordTable.ps1 to export the results as a word table"
 fi
